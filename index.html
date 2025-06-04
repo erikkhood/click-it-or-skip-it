@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Click It or Skip It</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .iphone-container {
+            width: 375px;
+            height: 812px;
+            background: #000;
+            border-radius: 40px;
+            padding: 8px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .iphone-screen {
+            width: 100%;
+            height: 100%;
+            background: #f2f2f7;
+            border-radius: 32px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* iPhone notch */
+        .notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 30px;
+            background: #000;
+            border-radius: 0 0 15px 15px;
+            z-index: 10;
+        }
+
+        /* Status bar */
+        .status-bar {
+            height: 44px;
+            background: transparent;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            padding-top: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #000;
+        }
+
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-right {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Game header */
+        .game-header {
+            background: linear-gradient(135deg, #007AFF, #5AC8FA);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .game-header h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* Back to menu button */
+        .back-btn {
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            color: white;
+            padding: 12px 16px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+        }
+
+        .back-btn:hover {
+            background: rgba(0, 0, 0, 0.8);
+            transform: scale(1.05);
+        }
+
+        .back-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Age selector */
+        .age-selector {
+            padding: 30px 20px;
+            text-align: center;
+            background: #f2f2f7;
+            height: calc(100% - 64px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .age-selector h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 15px;
+        }
+
+        .age-selector p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+        }
+
+        .age-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .age-btn {
+            padding: 18px 25px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .age-btn.big-kids { 
+            background: linear-gradient(135deg, #FF9500, #FF6B35);
+        }
+        .age-btn.tweens { 
+            background: linear-gradient(135deg, #007AFF, #5AC8FA);
+        }
+        .age-btn.teens { 
+            background: linear-gradient(135deg, #34C759, #30D158);
+        }
+        .age-btn.family { 
+            background: linear-gradient(135deg, #AF52DE, #FF2D92);
+        }
+
+        .age-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Game screen */
+        .game-screen {
+            display: none;
+            height: calc(100% - 64px);
+            background: #f2f2f7;
+            position: relative;
+        }
+
+        .game-content {
+            padding: 20px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .timer-section {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .timer {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #FF3B30;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .timer.warning {
+            color: #FF9500;
+            transform: scale(1.05);
+        }
+
+        .timer.danger {
+            color: #FF3B30;
+            transform: scale(1.1);
+            animation: pulse 0.5s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { opacity: 1; }
+            to { opacity: 0.7; }
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: #E5E5EA;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #007AFF, #5AC8FA);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        /* Messages app recreation */
+        .messages-app {
+            height: 300px;
+            background: #000;
+            border-radius: 20px;
+            margin: 15px 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .messages-header {
+            background: rgba(28, 28, 30, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 12px 20px;
+            border-bottom: 0.5px solid rgba(255,255,255,0.1);
+        }
+
+        .contact-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .contact-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF9500, #FF6B35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+            font-weight: 600;
+        }
+
+        .contact-details h3 {
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .contact-details p {
+            color: #8E8E93;
+            font-size: 0.8rem;
+        }
+
+        .messages-content {
+            flex: 1;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            background: #fff;
+        }
+
+        .message-bubble {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 20px;
+            margin: 8px 0;
+            word-wrap: break-word;
+            animation: messageSlide 0.5s ease;
+            position: relative;
+        }
+
+        .message-bubble.received {
+            background: #E5E5EA;
+            color: #000;
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+
+        .message-bubble.sent {
+            background: #007AFF;
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+
+        @keyframes messageSlide {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-time {
+            font-size: 0.7rem;
+            color: #666;
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        /* Decision buttons */
+        .decision-section {
+            padding: 0 5px 20px 5px;
+        }
+
+        .decision-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .decision-btn {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 25px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .respond-btn {
+            background: linear-gradient(135deg, #FF3B30, #FF6B6B);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 59, 48, 0.3);
+        }
+
+        .ignore-btn {
+            background: linear-gradient(135deg, #34C759, #30D158);
+            color: white;
+            box-shadow: 0 4px 15px rgba(52, 199, 89, 0.3);
+        }
+
+        .decision-btn:active {
+            transform: scale(0.98);
+        }
+
+        .decision-btn.clicked {
+            transform: scale(1.1);
+            animation: buttonClick 0.3s ease;
+        }
+
+        @keyframes buttonClick {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); box-shadow: 0 0 20px rgba(255, 255, 255, 0.8); }
+            100% { transform: scale(1); }
+        }
+
+        /* Feedback */
+        .feedback {
+            margin: 15px 5px 0 5px;
+            padding: 16px;
+            border-radius: 20px;
+            text-align: center;
+            font-weight: 500;
+            font-size: 0.9rem;
+            animation: feedbackSlide 0.5s ease;
+        }
+
+        .feedback.correct {
+            background: rgba(52, 199, 89, 0.1);
+            color: #34C759;
+            border: 1px solid rgba(52, 199, 89, 0.3);
+        }
+
+        .feedback.incorrect {
+            background: rgba(255, 59, 48, 0.1);
+            color: #FF3B30;
+            border: 1px solid rgba(255, 59, 48, 0.3);
+        }
+
+        @keyframes feedbackSlide {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Final screen */
+        .final-screen {
+            display: none;
+            padding: 40px 20px;
+            text-align: center;
+            background: #f2f2f7;
+            height: calc(100% - 64px);
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .final-screen h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 20px;
+        }
+
+        .final-stats {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .final-stats h3 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+        }
+
+        .final-stats p {
+            margin: 8px 0;
+            color: #666;
+        }
+
+        .play-again-btn {
+            background: linear-gradient(135deg, #007AFF, #5AC8FA);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+        }
+
+        .play-again-btn:active {
+            transform: scale(0.98);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Home indicator */
+        .home-indicator {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 134px;
+            height: 5px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 3px;
+        }
+
+        /* Character background notification */
+        .character-notification {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+            backdrop-filter: blur(5px);
+        }
+
+        .notification-bubble {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px;
+            max-width: 320px;
+            text-align: left;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: slideDown 0.5s ease;
+            border-left: 4px solid #007AFF;
+        }
+
+        .notification-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #007AFF, #5AC8FA);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 20px;
+        }
+
+        .notification-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #000;
+            margin-bottom: 3px;
+        }
+
+        .notification-subtitle {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .notification-content {
+            font-size: 0.9rem;
+            line-height: 1.4;
+            color: #333;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
+        .text-notification-btn {
+            background: linear-gradient(135deg, #34C759, #30D158);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .text-notification-btn:active {
+            transform: scale(0.95);
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Feedback overlay */
+        .feedback-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 40;
+            backdrop-filter: blur(5px);
+        }
+
+        .feedback-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px;
+            max-width: 280px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: feedbackPop 0.5s ease;
+            position: relative;
+        }
+
+        .feedback-card.correct {
+            border: 3px solid #34C759;
+        }
+
+        .feedback-card.incorrect {
+            border: 3px solid #FF3B30;
+        }
+
+        .close-feedback-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.1);
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            color: #666;
+            transition: all 0.2s ease;
+        }
+
+        .close-feedback-btn:hover {
+            background: rgba(0, 0, 0, 0.2);
+            color: #000;
+        }
+
+        .close-feedback-btn:active {
+            transform: scale(0.9);
+        }
+
+        .feedback-card h4 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+        }
+
+        .feedback-card.correct h4 {
+            color: #34C759;
+        }
+
+        .feedback-card.incorrect h4 {
+            color: #FF3B30;
+        }
+
+        .feedback-card p {
+            font-size: 0.9rem;
+            line-height: 1.4;
+            color: #333;
+        }
+
+        @keyframes feedbackPop {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="iphone-container">
+        <div class="iphone-screen">
+            <div class="notch"></div>
+            
+            <div class="status-bar">
+                <div class="status-left">
+                    <span>9:41</span>
+                </div>
+                <div class="status-right">
+                    <span>📶</span>
+                    <span>📶</span>
+                    <span>🔋</span>
+                </div>
+            </div>
+
+            <div class="game-header">
+                <h1>📱 Click It or Skip It</h1>
+                <div class="stats">
+                    <span>Score: <span id="score">0</span></span>
+                    <span>Round: <span id="round">0</span>/10</span>
+                    <span>Streak: <span id="streak">0</span></span>
+                </div>
+            </div>
+
+            <div class="age-selector" id="ageSelector">
+                <h2>Choose Your Age Group</h2>
+                <p>Different age groups see different types of messages!</p>
+                <div class="age-buttons">
+                    <button class="age-btn big-kids" onclick="startGame('big-kids')">
+                        🧒 Big Kids (8-10) - 15s
+                    </button>
+                    <button class="age-btn tweens" onclick="startGame('tweens')">
+                        👦 Tweens (11-13) - 10s
+                    </button>
+                    <button class="age-btn teens" onclick="startGame('teens')">
+                        👨‍🎓 Teens (14-17) - 5s
+                    </button>
+                    <button class="age-btn family" onclick="startGame('family')">
+                        👨‍👩‍👧‍👦 Family (All Ages) - 10s
+                    </button>
+                </div>
+            </div>
+
+            <div class="game-screen" id="gameScreen">
+                <!-- Character background notification -->
+                <div class="character-notification" id="characterNotification">
+                    <div class="notification-bubble">
+                        <div class="notification-header">
+                            <div class="notification-icon">📱</div>
+                            <div class="notification-details">
+                                <div class="notification-title">Your Situation</div>
+                                <div class="notification-subtitle">Put yourself in this scenario...</div>
+                            </div>
+                        </div>
+                        <p class="notification-content" id="characterBackground">Loading your scenario...</p>
+                        <button class="text-notification-btn" onclick="showTextNotification()">📱 You got a text!</button>
+                    </div>
+                </div>
+
+                <!-- Feedback overlay -->
+                <div class="feedback-overlay" id="feedbackOverlay">
+                    <div class="feedback-card" id="feedbackCard">
+                        <h4 id="feedbackTitle">Result</h4>
+                        <p id="feedbackText">Feedback text here...</p>
+                        <button class="close-feedback-btn" onclick="closeFeedback()">X</button>
+                    </div>
+                </div>
+
+                <div class="game-content">
+                    <div class="timer-section">
+                        <div class="timer" id="timer">Time: 15s</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="messages-app">
+                        <div class="messages-header">
+                            <div class="contact-info">
+                                <div class="contact-avatar" id="contactAvatar">?</div>
+                                <div class="contact-details">
+                                    <h3 id="contactName">Unknown</h3>
+                                    <p id="contactNumber">+1 (555) 123-4567</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="messages-content">
+                            <div class="message-time">Today 2:34 PM</div>
+                            <div class="message-bubble received" id="messageText">
+                                Loading message...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="decision-section">
+                        <div class="decision-buttons">
+                            <button class="decision-btn respond-btn" onclick="makeDecision('respond')">
+                                💬 Respond
+                            </button>
+                            <button class="decision-btn ignore-btn" onclick="makeDecision('ignore')">
+                                🚫 Ignore
+                            </button>
+                        </div>
+                        
+                        <div class="feedback hidden" id="feedback"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="final-screen" id="finalScreen">
+                <h2>🎉 Game Complete!</h2>
+                <div class="final-stats" id="finalStats">
+                    <!-- Stats will be populated here -->
+                </div>
+                <button class="play-again-btn" onclick="playAgain()">
+                    🔄 Play Again
+                </button>
+            </div>
+
+            <div class="home-indicator"></div>
+            
+            <!-- Back to menu button - appears on all screens except age selector -->
+            <button class="back-btn hidden" id="backButton" onclick="backToMenu()">← Menu</button>
+        </div>
+    </div>
+
+    <script>
+        // Audio Context for sound effects
+        let audioContext;
+        let isSoundEnabled = true;
+
+        // Initialize audio context
+        function initAudio() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            } catch (e) {
+                console.log('Web Audio API not supported');
+                isSoundEnabled = false;
+            }
+        }
+
+        // Sound effect functions
+        function playTextNotification() {
+            if (!isSoundEnabled || !audioContext) return;
+            
+            // iPhone-style text notification sound
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(1000, audioContext.currentTime);
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.1);
+            
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.01);
+            gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.2);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.2);
+        }
+
+        function playCorrectSound() {
+            if (!isSoundEnabled || !audioContext) return;
+            
+            // Happy success chime
+            const frequencies = [523, 659, 784]; // C, E, G
+            frequencies.forEach((freq, index) => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
+                
+                const startTime = audioContext.currentTime + (index * 0.15);
+                gainNode.gain.setValueAtTime(0, startTime);
+                gainNode.gain.linearRampToValueAtTime(0.25, startTime + 0.01);
+                gainNode.gain.linearRampToValueAtTime(0, startTime + 0.4);
+                
+                oscillator.start(startTime);
+                oscillator.stop(startTime + 0.4);
+            });
+        }
+
+        function playIncorrectSound() {
+            if (!isSoundEnabled || !audioContext) return;
+            
+            // Gentle error buzz
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+            oscillator.type = 'sawtooth';
+            
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.15, audioContext.currentTime + 0.01);
+            gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.4);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.4);
+        }
+
+        function playButtonClick() {
+            if (!isSoundEnabled || !audioContext) return;
+            
+            // Subtle button click
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+            oscillator.type = 'square';
+            
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.01);
+            gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.05);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.05);
+        }
+
+        function playTimerWarning() {
+            if (!isSoundEnabled || !audioContext) return;
+            
+            // Urgent beep for timer warning
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + 0.01);
+            gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.1);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.1);
+        }
+
+        function playGameComplete() {
+            if (!isSoundEnabled || !audioContext) return;
+            
+            // Victory fanfare
+            const melody = [523, 659, 784, 1047]; // C, E, G, C
+            melody.forEach((freq, index) => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
+                
+                const startTime = audioContext.currentTime + (index * 0.15);
+                gainNode.gain.setValueAtTime(0, startTime);
+                gainNode.gain.linearRampToValueAtTime(0.25, startTime + 0.01);
+                gainNode.gain.linearRampToValueAtTime(0, startTime + 0.4);
+                
+                oscillator.start(startTime);
+                oscillator.stop(startTime + 0.4);
+            });
+        }
+
+        function playTickSound() {
+            if (!isSoundEnabled || !audioContext) return;
+            
+            // Subtle tick for timer countdown
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+            oscillator.type = 'square';
+            
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.05, audioContext.currentTime + 0.01);
+            gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.03);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.03);
+        }
+
+        // Initialize audio on first user interaction
+        function enableAudio() {
+            if (!audioContext) {
+                initAudio();
+            }
+            if (audioContext && audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+        }
+
+        let currentAge = '';
+        let currentRound = 0;
+        let score = 0;
+        let streak = 0;
+        let timeLeft = 15;
+        let timer;
+        let feedbackTimeout;
+        let currentMessage = {};
+        let hasPlayedWarning = false;
+
+        const timeSettings = {
+            'big-kids': 15,
+            'tweens': 10,
+            'teens': 5,
+            'family': 10
+        };
+
+        const messages = {
+            'big-kids': [
+                {
+                    sender: "Unknown Number",
+                    number: "+1 (555) 012-3456",
+                    text: "Hey! You won a free toy! Click this link to claim it: bit.ly/freetoy123",
+                    isScam: true,
+                    explanation: "🚨 Scam! Real contests don't ask you to click random links. Always ask an adult before clicking links from strangers.",
+                    characterBackground: "You're 9 years old and LOVE getting free things. When someone offers you something for free, you get really excited and don't always think about whether it's safe first."
+                },
+                {
+                    sender: "Mom",
+                    number: "Mom",
+                    text: "Can you help me with groceries after school today?",
+                    isScam: false,
+                    explanation: "✅ Safe! This looks like a normal message from your mom.",
+                    characterBackground: "You're a helpful kid who always tries to do what your parents ask. You recognize your family's phone numbers and trust messages from people you know."
+                },
+                {
+                    sender: "Unknown",
+                    number: "+1 (555) 987-6543",
+                    text: "You've won $1000! Send us your address to claim your prize!",
+                    isScam: true,
+                    explanation: "🚨 Scam! Never give personal information to strangers, especially your address.",
+                    characterBackground: "You're 8 years old and think $1000 is the most money in the world! You get really excited about prizes and sometimes don't think about whether they're real."
+                },
+                {
+                    sender: "Maple Elementary",
+                    number: "+1 (555) 234-5678",
+                    text: "Reminder: Picture day is tomorrow. Please wear your best smile!",
+                    isScam: false,
+                    explanation: "✅ Safe! Schools often send reminders like this to students and parents."
+                },
+                {
+                    sender: "Unknown",
+                    number: "+1 (555) 111-2222",
+                    text: "Free candy! Just tell me your name and where you live!",
+                    isScam: true,
+                    explanation: "🚨 Scam! Never share personal information for 'free' things. This is very dangerous.",
+                    characterBackground: "You're 9 years old and candy is your favorite thing ever! You're trusting and think most adults are trying to be nice to you."
+                },
+                {
+                    sender: "Dad",
+                    number: "Dad",
+                    text: "Running late from work. Start homework and I'll help when I get home.",
+                    isScam: false,
+                    explanation: "✅ Safe! Normal parent message about being late."
+                },
+                {
+                    sender: "Unknown",
+                    number: "+1 (555) 999-8888",
+                    text: "Your friend told us to text you! Meet us at the park alone!",
+                    isScam: true,
+                    explanation: "🚨 Scam! Real friends don't send strangers to text you. Never meet strangers alone.",
+                    characterBackground: "You're 10 years old and love making new friends. You're curious about people and sometimes trust strangers who seem friendly."
+                }
+            ],
+            'tweens': [
+                {
+                    sender: "Unknown Number",
+                    number: "+1 (555) 123-7890",
+                    text: "OMG you're so popular! See what people are saying about you: sketchy-site.com/gossip",
+                    isScam: true,
+                    explanation: "🚨 Scam! This preys on curiosity and social anxiety. The link probably contains malware.",
+                    characterBackground: "You're 12 and really care about what people think of you. You worry about your reputation and get anxious about what others might be saying behind your back."
+                },
+                {
+                    sender: "Maya",
+                    number: "+1 (555) 876-5432",
+                    text: "Want to hang out at the mall this weekend?",
+                    isScam: false,
+                    explanation: "✅ Safe! Normal friend conversation, though always confirm with parents first."
+                },
+                {
+                    sender: "Roblox Security",
+                    number: "+1 (555) 666-7777",
+                    text: "Your Roblox account will be deleted unless you verify with your password NOW!",
+                    isScam: true,
+                    explanation: "🚨 Scam! Real companies never ask for passwords via text. Log into the real site to check.",
+                    characterBackground: "You're 13 and spend a LOT of time gaming online. Your accounts are super important to you and you panic at the thought of losing all your progress and friends."
+                },
+                {
+                    sender: "City Library",
+                    number: "+1 (555) 345-6789",
+                    text: "Your book 'Wonder' is due tomorrow. Return it to avoid late fees.",
+                    isScam: false,
+                    explanation: "✅ Safe! Libraries commonly send automated reminders about due dates."
+                },
+                {
+                    sender: "Secret Club",
+                    number: "+1 (555) 000-1111",
+                    text: "You've been chosen for a secret mission! Reply YES to join our exclusive club!",
+                    isScam: true,
+                    explanation: "🚨 Scam! 'Secret' and 'exclusive' are red flags. Real activities don't recruit via random texts.",
+                    characterBackground: "You're 11 and sometimes feel left out at school. You really want to be part of something special and exclusive that makes you feel important and chosen."
+                },
+                {
+                    sender: "Instagram",
+                    number: "+1 (555) 222-3333",
+                    text: "Someone tried to log into your account! Click here to secure it: fake-instagram.net",
+                    isScam: true,
+                    explanation: "🚨 Scam! The real Instagram would never use a different website. Always go to the real app.",
+                    characterBackground: "You're 12 and your social media accounts are everything to you. You have lots of photos and followers, and you'd be devastated if someone hacked your account."
+                },
+                {
+                    sender: "Coach Johnson",
+                    number: "+1 (555) 456-7890",
+                    text: "Soccer practice moved to 4 PM tomorrow due to rain. See you there!",
+                    isScam: false,
+                    explanation: "✅ Safe! Coaches often text schedule changes to players and parents."
+                }
+            ],
+            'family': [
+                {
+                    sender: "Medicare Alert",
+                    number: "+1 (555) 123-4567",
+                    text: "Your Medicare benefits will expire soon! Call now to renew or lose coverage forever!",
+                    isScam: true,
+                    explanation: "🚨 Scam! Medicare doesn't expire suddenly. Real Medicare communications come through official mail, not urgent texts.",
+                    characterBackground: "You're a senior citizen who worries about healthcare costs. You depend on Medicare and get anxious when you think your benefits might be at risk."
+                },
+                {
+                    sender: "Dr. Smith's Office",
+                    number: "+1 (555) 789-0123",
+                    text: "Reminder: Your appointment is tomorrow at 2 PM. Reply CONFIRM or call to reschedule.",
+                    isScam: false,
+                    explanation: "✅ Safe! Medical offices commonly send appointment reminders via text."
+                },
+                {
+                    sender: "Social Security",
+                    number: "+1 (555) 246-8135",
+                    text: "URGENT: Your Social Security number has been suspended due to suspicious activity. Press 1 now!",
+                    isScam: true,
+                    explanation: "🚨 Scam! Social Security numbers can't be 'suspended.' The real SSA doesn't text about problems.",
+                    characterBackground: "You're a working adult who relies on Social Security for your future. The thought of losing these benefits terrifies you and makes you want to act quickly to protect them."
+                },
+                {
+                    sender: "Walgreens",
+                    number: "+1 (555) 456-7890",
+                    text: "Your prescription for Jane Doe is ready for pickup. Store hours: 8AM-10PM.",
+                    isScam: false,
+                    explanation: "✅ Safe! Pharmacies regularly text when prescriptions are ready for pickup."
+                },
+                {
+                    sender: "IRS Notice",
+                    number: "+1 (555) 987-6543",
+                    text: "Final notice: You owe $3,247 in back taxes. Pay immediately or face arrest. Call now!",
+                    isScam: true,
+                    explanation: "🚨 Scam! The IRS never threatens arrest via text and doesn't demand immediate payment through texts.",
+                    characterBackground: "You're a busy parent who worries about money and taxes. You're afraid of getting in trouble with the government and tend to panic when you think you owe money."
+                },
+                {
+                    sender: "Amazon",
+                    number: "+1 (555) 135-7924",
+                    text: "Unusual sign-in attempt detected. If this wasn't you, secure your account: amaz0n-security.net",
+                    isScam: true,
+                    explanation: "🚨 Scam! Notice the fake URL 'amaz0n' instead of 'amazon'. Always go directly to the real website.",
+                    characterBackground: "You're a frequent online shopper who has all your payment info saved. You're not super tech-savvy and worry about hackers getting into your accounts."
+                },
+                {
+                    sender: "Bank of America",
+                    number: "+1 (555) 802-4680",
+                    text: "Your card ending in 1234 was used for $500 at Walmart. If not you, call 1-800-432-1000.",
+                    isScam: false,
+                    explanation: "✅ Safe! If the phone number matches your real bank's number. Banks do send fraud alerts like this."
+                },
+                {
+                    sender: "Tech Support",
+                    number: "+1 (555) 666-7777",
+                    text: "Your computer has been infected with 12 viruses! Download our cleanup tool now or lose all files!",
+                    isScam: true,
+                    explanation: "🚨 Scam! Real tech companies don't text about computer problems. This is designed to scare you into downloading malware.",
+                    characterBackground: "You're not very comfortable with technology and worry about viruses and hackers. You depend on your computer for work and would be lost if something happened to it."
+                },
+                {
+                    sender: "Publishers Clearing",
+                    number: "+1 (555) 111-2222",
+                    text: "CONGRATULATIONS! You've won our $1,000,000 sweepstakes! Claim now with processing fee of $299!",
+                    isScam: true,
+                    explanation: "🚨 Scam! Real sweepstakes never require payment to claim prizes. This is a classic advance fee scam.",
+                    characterBackground: "You're going through a tough financial time and dream about winning the lottery. A million dollars would solve all your problems and change your life forever."
+                },
+                {
+                    sender: "Home Depot",
+                    number: "+1 (555) 345-6789",
+                    text: "Your order #HD789456 has been delivered. Thank you for shopping with us!",
+                    isScam: false,
+                    explanation: "✅ Safe! If you actually made an order. Retailers commonly send delivery confirmations via text."
+                }
+            ],
+            'teens': [
+                {
+                    sender: "Bank Alert",
+                    number: "+1 (555) 246-8135",
+                    text: "URGENT: Suspicious activity on your account. Click here to verify: fakebank-security.net",
+                    isScam: true,
+                    explanation: "🚨 Scam! Real banks never ask you to click links in texts. Always call your bank directly.",
+                    characterBackground: "You're 16 and just got your first bank account and debit card. You're still learning about money and banking, and you panic when you think something's wrong with your account."
+                },
+                {
+                    sender: "Tony's Pizza",
+                    number: "+1 (555) 789-0123",
+                    text: "Your pizza order is ready for pickup! Order #2847",
+                    isScam: false,
+                    explanation: "✅ Safe! If you actually ordered pizza. Otherwise, just ignore - probably wrong number."
+                },
+                {
+                    sender: "Work From Home",
+                    number: "+1 (555) 135-7924",
+                    text: "Make $500/week working from home! No experience needed! Reply START to begin!",
+                    isScam: true,
+                    explanation: "🚨 Scam! Get-rich-quick schemes are always scams. Real jobs require applications and interviews.",
+                    characterBackground: "You're 17 and really want money for a car, college, or just to be independent. Easy money sounds amazing when you're tired of asking parents for everything."
+                },
+                {
+                    sender: "Netflix",
+                    number: "+1 (555) 468-0246",
+                    text: "Your payment failed. Update your info: netflix-billing-update.com",
+                    isScam: true,
+                    explanation: "🚨 Scam! The URL isn't netflix.com. Always go directly to the real website, not through links.",
+                    characterBackground: "You're 15 and Netflix is your life - you watch it every day after school. You share the family account and would die if your parents found out you messed something up."
+                },
+                {
+                    sender: "College Board",
+                    number: "+1 (555) 357-9135",
+                    text: "Your SAT scores are available. Log in to your College Board account to view them.",
+                    isScam: false,
+                    explanation: "✅ Safe! This is how College Board actually notifies students about scores."
+                },
+                {
+                    sender: "QuickCash Loans",
+                    number: "+1 (555) 802-4680",
+                    text: "You've been pre-approved for a $5000 loan! Bad credit OK! Apply now!",
+                    isScam: true,
+                    explanation: "🚨 Scam! Predatory lending scams target young people. Real loans require credit checks and documentation.",
+                    characterBackground: "You're 18 and just starting college. You're stressed about money and student loans, and $5000 sounds like it could solve a lot of your financial problems right now."
+                },
+                {
+                    sender: "Apple ID",
+                    number: "+1 (555) 975-3186",
+                    text: "Your Apple ID will be locked. Verify now: apple-id-verification.net",
+                    isScam: true,
+                    explanation: "🚨 Scam! Apple never texts about account issues. The website isn't apple.com either.",
+                    characterBackground: "You're 16 and your iPhone is basically your entire life. Your Apple ID has all your photos, music, apps, and messages - losing access would be a total disaster."
+                },
+                {
+                    sender: "Best Buy",
+                    number: "+1 (555) 864-2975",
+                    text: "Your order #BB123456 has shipped! Track at bestbuy.com/track",
+                    isScam: false,
+                    explanation: "✅ Safe! If you actually made an order. Real retailers send shipping notifications like this."
+                }
+            ]
+        };
+
+        function getContactAvatar(name) {
+            if (name === 'Unknown' || name.includes('Unknown')) return '❓';
+            if (name === 'Mom' || name === 'Dad') return '👨‍👩‍👧‍👦';
+            if (name.includes('Bank') || name.includes('Alert')) return '🏦';
+            if (name.includes('School') || name.includes('Elementary') || name.includes('Coach')) return '🏫';
+            if (name.includes('Library')) return '📚';
+            if (name.includes('Pizza') || name.includes('Tony')) return '🍕';
+            return name.charAt(0).toUpperCase();
+        }
+
+        function startGame(ageGroup) {
+            enableAudio(); // Initialize audio on user interaction
+            playButtonClick();
+            
+            currentAge = ageGroup;
+            currentRound = 0;
+            score = 0;
+            streak = 0;
+            
+            document.getElementById('ageSelector').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'block';
+            document.getElementById('backButton').classList.remove('hidden');
+            
+            nextRound();
+        }
+
+        function nextRound() {
+            if (currentRound >= 10) {
+                endGame();
+                return;
+            }
+
+            currentRound++;
+            hasPlayedWarning = false; // Reset warning flag for new round
+            
+            // Get random message for current age group
+            const ageMessages = messages[currentAge];
+            currentMessage = ageMessages[Math.floor(Math.random() * ageMessages.length)];
+            
+            // Update the round display immediately
+            document.getElementById('round').textContent = currentRound;
+            
+            // Show character background if available, otherwise go straight to message
+            if (currentMessage.characterBackground) {
+                showCharacterBackground();
+            } else {
+                showMessageDirectly();
+            }
+        }
+
+        function showCharacterBackground() {
+            // Make sure timer is stopped
+            clearInterval(timer);
+            
+            document.getElementById('characterBackground').textContent = currentMessage.characterBackground;
+            document.getElementById('characterNotification').style.display = 'flex';
+        }
+
+        function showTextNotification() {
+            enableAudio();
+            playTextNotification(); // Play notification sound
+            
+            document.getElementById('characterNotification').style.display = 'none';
+            
+            // Show the actual message immediately - no delay needed
+            showMessageDirectly();
+        }
+
+        function showMessageDirectly() {
+            // Ensure character notification is hidden
+            document.getElementById('characterNotification').style.display = 'none';
+            
+            // Set up the timer for this round
+            timeLeft = timeSettings[currentAge];
+            hasPlayedWarning = false; // Reset warning for this round
+            
+            // Update display elements for the current message
+            document.getElementById('contactName').textContent = currentMessage.sender;
+            document.getElementById('contactNumber').textContent = currentMessage.number;
+            document.getElementById('contactAvatar').textContent = getContactAvatar(currentMessage.sender);
+            document.getElementById('messageText').textContent = currentMessage.text;
+            document.getElementById('feedback').classList.add('hidden');
+            
+            // Reset timer display and styling
+            const timerElement = document.getElementById('timer');
+            timerElement.textContent = `Time: ${timeLeft}s`;
+            timerElement.className = 'timer';
+            
+            updateProgressBar();
+            
+            // Only NOW start the timer
+            startTimer();
+        }
+
+        function continueToMessage() {
+            // Alias for compatibility - redirects to showMessageDirectly
+            showMessageDirectly();
+        }
+
+        function startTimer() {
+            clearInterval(timer);
+            const timerElement = document.getElementById('timer');
+            
+            timer = setInterval(() => {
+                timeLeft--;
+                timerElement.textContent = `Time: ${timeLeft}s`;
+                
+                // Add visual warnings based on time remaining
+                timerElement.className = 'timer';
+                if (timeLeft <= 3) {
+                    timerElement.classList.add('danger');
+                    if (!hasPlayedWarning) {
+                        playTimerWarning();
+                        hasPlayedWarning = true;
+                    }
+                } else if (timeLeft <= 6) {
+                    timerElement.classList.add('warning');
+                    if (!hasPlayedWarning) {
+                        playTickSound();
+                        hasPlayedWarning = true;
+                    }
+                }
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    makeDecision('timeout');
+                }
+            }, 1000);
+        }
+
+        function makeDecision(decision) {
+            enableAudio();
+            playButtonClick(); // Button click sound
+            
+            // Stop the timer immediately to prevent conflicts
+            clearInterval(timer);
+            
+            // Add click animation to button
+            const buttons = document.querySelectorAll('.decision-btn');
+            buttons.forEach(btn => {
+                btn.classList.add('clicked');
+                setTimeout(() => btn.classList.remove('clicked'), 300);
+            });
+
+            let isCorrect = false;
+            let feedbackTitle = '';
+            let feedbackText = '';
+            
+            if (decision === 'timeout') {
+                feedbackTitle = "⏰ Time's Up!";
+                feedbackText = currentMessage.explanation;
+                streak = 0;
+                isCorrect = false;
+                playIncorrectSound(); // Timeout sound
+            } else {
+                const shouldIgnore = currentMessage.isScam;
+                isCorrect = (decision === 'ignore' && shouldIgnore) || (decision === 'respond' && !shouldIgnore);
+                
+                if (isCorrect) {
+                    feedbackTitle = "🎉 Correct!";
+                    feedbackText = currentMessage.explanation;
+                    score += 10;
+                    streak++;
+                    playCorrectSound(); // Success sound
+                } else {
+                    feedbackTitle = "😬 Oops!";
+                    feedbackText = currentMessage.explanation;
+                    streak = 0;
+                    playIncorrectSound(); // Error sound
+                }
+            }
+            
+            // Update stats immediately
+            document.getElementById('score').textContent = score;
+            document.getElementById('streak').textContent = streak;
+            
+            // Show feedback overlay
+            showFeedbackOverlay(feedbackTitle, feedbackText, isCorrect);
+        }
+
+        function showFeedbackOverlay(title, text, isCorrect) {
+            document.getElementById('feedbackTitle').textContent = title;
+            document.getElementById('feedbackText').textContent = text;
+            
+            const feedbackCard = document.getElementById('feedbackCard');
+            feedbackCard.className = 'feedback-card ' + (isCorrect ? 'correct' : 'incorrect');
+            
+            document.getElementById('feedbackOverlay').style.display = 'flex';
+            
+            // Auto-advance after 3 seconds
+            feedbackTimeout = setTimeout(() => {
+                closeFeedback();
+            }, 3000);
+        }
+
+        function updateProgressBar() {
+            const progress = (currentRound / 10) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        function endGame() {
+            clearInterval(timer); // Ensure timer is cleared
+            playGameComplete(); // Victory fanfare
+            
+            document.getElementById('gameScreen').style.display = 'none';
+            document.getElementById('finalScreen').style.display = 'flex';
+            
+            const percentage = (score / 100) * 100;
+            let message = '';
+            let emoji = '';
+            
+            if (percentage >= 80) {
+                message = "Excellent! You're a Scam Detection Expert!";
+                emoji = "🏆";
+            } else if (percentage >= 60) {
+                message = "Good job! You're getting better at spotting scams!";
+                emoji = "👍";
+            } else {
+                message = "Keep practicing! Scam detection takes time to learn.";
+                emoji = "📚";
+            }
+            
+            document.getElementById('finalStats').innerHTML = `
+                <h3>${emoji} ${message}</h3>
+                <p><strong>Final Score:</strong> ${score}/100</p>
+                <p><strong>Correct Answers:</strong> ${score/10} out of 10</p>
+                <p style="margin-top: 15px; font-style: italic;">Remember: When in doubt, don't click or respond. Ask a trusted adult!</p>
+            `;
+        }
+
+        function resetGame() {
+            playButtonClick(); // Menu button sound
+            
+            // Clear any running timers
+            clearInterval(timer);
+            clearTimeout(feedbackTimeout);
+            document.getElementById('finalScreen').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'none';
+            document.getElementById('ageSelector').style.display = 'flex';
+            document.getElementById('backButton').classList.add('hidden');
+            
+            // Hide overlays
+            document.getElementById('characterNotification').style.display = 'none';
+            document.getElementById('feedbackOverlay').style.display = 'none';
+            
+            // Reset all values
+            currentRound = 0;
+            score = 0;
+            streak = 0;
+            timeLeft = 15;
+            hasPlayedWarning = false;
+            document.getElementById('score').textContent = '0';
+            document.getElementById('round').textContent = '0';
+            document.getElementById('streak').textContent = '0';
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('timer').textContent = 'Time: 15s';
+        }
+
+        function backToMenu() {
+            resetGame();
+        }
+
+        function closeFeedback() {
+            enableAudio();
+            playButtonClick(); // Close button sound
+            
+            // Clear any running timeouts
+            clearTimeout(feedbackTimeout);
+            clearInterval(timer);
+            
+            // Hide feedback
+            document.getElementById('feedbackOverlay').style.display = 'none';
+            
+            // Move to next round
+            nextRound();
+        }
+
+        function playAgain() {
+            enableAudio();
+            playButtonClick(); // Play Again button sound
+            resetGame();
+        }
+    </script>
+</body>
+</html> 
